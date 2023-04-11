@@ -5,6 +5,16 @@
 #include "SDL2/SDL_image.h"
 #include "SDL2/SDL_timer.h"
 
+struct Position {
+    int x;
+    int y;
+};
+
+struct Velocity {
+    int x;
+    int y;
+};
+
 int main (int argc, char *argv[]) {
     std::cout << "hello world!" << std::endl;
 
@@ -22,13 +32,9 @@ int main (int argc, char *argv[]) {
     SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, 0);
 
     SDL_Texture* texture = IMG_LoadTexture(renderer, "assets/tile000.png");
-    int xPos = 0;
-    int yPos = 100;
-    int xVel = 0;
-    int yVel = 0;
-    int xDir = 0;
-    int yDir = 0;
-    const int DEFAULT_VEL = 5;
+    Position playerPosition = {0, 100};
+    Velocity playerVelocity = {0, 0};
+    const int DEFAULT_SPEED = 5;
     const int TICK_RATE = 16;
 
     bool running = true;
@@ -46,33 +52,31 @@ int main (int argc, char *argv[]) {
             if (e.type == SDL_QUIT) {
                 running = false;
             } else if (e.type == SDL_KEYDOWN && e.key.repeat == 0) {
-                double vel = DEFAULT_VEL;
                 switch (e.key.keysym.sym) {
-                    case SDLK_a: xDir = -1; break;
-                    case SDLK_d: xDir = 1; break;
-                    case SDLK_w: yDir = -1; break;
-                    case SDLK_s: yDir = 1; break;
+                    case SDLK_a: playerVelocity.x = -1; break;
+                    case SDLK_d: playerVelocity.x  = 1; break;
+                    case SDLK_w: playerVelocity.y = -1; break;
+                    case SDLK_s: playerVelocity.y = 1; break;
                 }
             } else if (e.type == SDL_KEYUP && e.key.repeat == 0) {
                 switch (e.key.keysym.sym) {
-                    case SDLK_a: xDir = 0; break;
-                    case SDLK_d: xDir = 0; break;
-                    case SDLK_w: yDir = 0; break;
-                    case SDLK_s: yDir = 0; break;
+                    case SDLK_a: 
+                    case SDLK_d:
+                        playerVelocity.x = 0; break;
+                    case SDLK_w:
+                    case SDLK_s: 
+                        playerVelocity.y = 0; break;
                 }
             }
         }
-
-        xVel = DEFAULT_VEL * xDir;
-        yVel = DEFAULT_VEL * yDir;
 
         int updateCounter = 0;
         while (lag >= TICK_RATE) {
             if (updateCounter > 10) {
                 break;
             }
-            xPos += xVel;
-            yPos += yVel;
+            playerPosition.x += playerVelocity.x * DEFAULT_SPEED;
+            playerPosition.y += playerVelocity.y * DEFAULT_SPEED;
 
             lag -= TICK_RATE;
             updateCounter++;
@@ -80,8 +84,8 @@ int main (int argc, char *argv[]) {
 
         double renderRatio = lag / TICK_RATE;
         SDL_RenderClear(renderer);
-        SDL_Rect dstrect = { (int) (xPos + (xVel * renderRatio)), (int) (yPos + (yVel * renderRatio)), 192, 192};
-        //SDL_Rect dstrect = { xPos, yPos, 192, 192};
+        //SDL_Rect dstrect = { (int) (xPos + (xVel * renderRatio)), (int) (yPos + (yVel * renderRatio)), 192, 192};
+        SDL_Rect dstrect = { playerPosition.x, playerPosition.y, 192, 192};
         SDL_RenderCopy(renderer, texture, NULL, &dstrect);
         SDL_RenderPresent(renderer);
     }
